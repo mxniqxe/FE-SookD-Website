@@ -14,7 +14,8 @@ export async function getProducts(): Promise<Product[]> {
         preorderDate: item.product_preorderDate,
         remain: Number(item.product_remain),
         shipping_duration: item.product_shipping_duration,
-        shipping_area: item.product_shipping_area
+        shipping_area: item.product_shipping_area,
+        link : item.product_link
     }));
 }
 

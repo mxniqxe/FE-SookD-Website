@@ -13,6 +13,9 @@ import ProductDetailPage, { PRODUCT_DETAIL_CSS } from './components/ProductDetai
 import ProductsPage, { PRODUCTS_CSS } from './components/ProductsPage';
 import { SITE_CONTENT as c } from './constants/content';
 
+import ChatWidget from "./components/ChatWidget/ChatWidget";
+import { getSessionId } from './utils/session';
+
 type Page = 'home' | 'experiences' | 'products' | 'activity-detail' | 'product-detail';
 
 export default function App() {
@@ -22,6 +25,9 @@ export default function App() {
   const [prevPage, setPrevPage] = useState<Page>('experiences');
 
   useEffect(() => {
+    // ============= sessionCheck ========//
+    getSessionId();
+    // ================================= //
     window.history.replaceState({ page: 'home' }, '');
     const handlePop = (e: PopStateEvent) => {
       const s = e.state;
@@ -60,8 +66,9 @@ export default function App() {
       <style>{ACTIVITY_DETAIL_CSS}</style>
       <style>{PRODUCT_DETAIL_CSS}</style>
       <style>{PRODUCTS_CSS}</style>
+      <ChatWidget />
       <Navbar links={c.navLinks} onNavigate={navigate} currentPage={page} lightTop={page !== 'home'} />
-
+      
       {page === 'product-detail' ? (
         <ProductDetailPage productId={selectedProductId} onBack={() => setPage(prevPage)} onSelectProduct={(id) => openProduct(id, prevPage)} />
       ) : page === 'activity-detail' ? (
@@ -97,6 +104,7 @@ export default function App() {
           />
           <div className="section-gap" />
           <Footer data={c.footer} />
+
         </main>
       )}
     </>

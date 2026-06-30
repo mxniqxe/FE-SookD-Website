@@ -9,6 +9,7 @@ import reviewRoutes from "./routes/reviewRoutes"
 import orderRoutes from "./routes/orderRoutes"
 import promotionRoutes from "./routes/promotionRoutes"
 import authRoutes from "./routes/authRoutes";
+import {chatController} from "../chatbot/controllers/chatController"
 
 
 const app = express();
@@ -22,6 +23,7 @@ app.use("/api/reviews",reviewRoutes);
 app.use("/api/orders",orderRoutes);
 app.use("/api/promotions",promotionRoutes);
 app.use("/api/auth",authRoutes);
+app.post( "/chat",chatController );
 
 const PORT = 3000;
 

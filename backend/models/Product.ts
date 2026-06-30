@@ -10,4 +10,5 @@ export interface Product {
     product_remain: number;
     product_shipping_duration: string;
     product_shipping_area: string;
+    product_link: string;
 }

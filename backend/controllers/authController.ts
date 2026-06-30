@@ -2,6 +2,7 @@ import { Request,Response } from "express";
 
 import * as authService from "../services/authService";
 import * as userService from "../services/userService";
+import { AuthRequest } from "../middlewares/authMiddleware";
 
 export async function getAllUsers(
     req: Request,
@@ -129,5 +130,48 @@ export function logout(
         message: "Logout success"
 
     });
+
+}
+
+// Check User login //
+export async function getLoginUser(
+    req: AuthRequest,
+    res: Response
+) {
+
+    try {
+
+        const userId = req.user!.user_id;
+
+        const users = await userService.getUsers();
+
+        const user = users.find(
+            u => u.user_id === userId
+        );
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        // ไม่ส่ง password กลับ
+        const { password, ...userData } = user;
+
+        return res.json({
+            success: true,
+            user: userData
+        });
+
+    } catch (error) {
+        console.log(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+
+    }
 
 }
