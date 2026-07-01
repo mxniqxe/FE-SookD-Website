@@ -9,7 +9,8 @@ import reviewRoutes from "./routes/reviewRoutes"
 import orderRoutes from "./routes/orderRoutes"
 import promotionRoutes from "./routes/promotionRoutes"
 import authRoutes from "./routes/authRoutes";
-import {chatController} from "../chatbot/controllers/chatController"
+import {chatController,contactAdmin} from "../chatbot/controllers/chatController"
+import { optionalVerifyToken, verifyToken } from "./middlewares/authMiddleware";
 
 
 const app = express();
@@ -23,7 +24,8 @@ app.use("/api/reviews",reviewRoutes);
 app.use("/api/orders",orderRoutes);
 app.use("/api/promotions",promotionRoutes);
 app.use("/api/auth",authRoutes);
-app.post( "/chat",chatController );
+app.post("/chat", optionalVerifyToken,chatController);
+app.post( "/contact-admin", optionalVerifyToken,contactAdmin );
 
 const PORT = 3000;
 

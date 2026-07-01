@@ -39,11 +39,28 @@
     }
 }
 
+@keyframes bubbleOut {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(15px) scale(.9);
+    }
+}
+
+
 
 .auto-message.show {
     opacity: 1;
     transform: translateY(0);
     animation: bubbleIn 1.0s ease forwards;
+}
+
+.auto-message.hide{
+    animation:bubbleOut .35s ease forwards;
 }
 
 /* =========================
@@ -80,6 +97,46 @@
 .chat-btn:hover {
     transform: scale(1.1);
 }
+
+/* =========================
+         HERO
+============================ */
+
+.chat-btn--hero{
+
+    width:300px;
+    height:300px;
+
+    border-radius:0;
+    box-shadow:none;
+    background:none;
+
+    right:10px;
+    bottom:10px;
+}
+
+.chat-btn--hero img{
+    object-fit:contain;
+    border-radius:0;
+      mask-image: linear-gradient(
+        to bottom,
+        black 85%,
+        transparent 100%
+    );
+
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        black 85%,
+        transparent 100%
+    );
+}
+
+.auto-message--hero{
+    border-radius: 20px 20px 20px 20px;
+    bottom: 300px; 
+    right: 50px;  /* ปรับตัวเลขได้ */
+}
+
 
 /* =========================
    CHAT BOX
@@ -317,9 +374,10 @@
     border-radius: 25px;
     text-decoration: none;
 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    /* box-shadow: 0 4px 12px rgba(0,0,0,0.15); */
 
     z-index: 9999;
+    font: inherit;
 
     transition: 0.3s;
 }

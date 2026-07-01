@@ -1,15 +1,45 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import "./ChatWidget.css";
+import { getSessionId } from "../../utils/session";
 
 
 export default function ChatWidget() {
+    const token = localStorage.getItem("token");
     type ChatMessage = {
         sender: "user" | "bot";
         text: string;
         link?: string;
     };
+    const location = useLocation();
+    const isDiscover = location.pathname === "/discover";
+    const [heroVisible, setHeroVisible] = useState(false);
+    useEffect(() => {
+        const hero = document.querySelector(".hero");
+
+        if (!hero) {
+            setHeroVisible(false);
+            return;
+        }
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                setHeroVisible(entry.isIntersecting);
+            },
+            {
+                threshold: 0.2
+            }
+        );
+
+        observer.observe(hero);
+
+        return () => observer.disconnect();
+
+    }, []);
+
     const [isOpen, setIsOpen] = useState(false);
     const [showBubble, setShowBubble] = useState(true);
+    const [bubbleLeaving, setBubbleLeaving] = useState(false);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
 
@@ -31,6 +61,18 @@ export default function ChatWidget() {
         setTimeout(() => {
             setAdminMinimized(true);
         }, 8000);
+    }
+
+    function hideBubble() {
+
+        setBubbleLeaving(true);
+
+        setTimeout(() => {
+
+            setShowBubble(false);
+
+        }, 350); // เท่ากับ animation
+
     }
 
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -57,9 +99,7 @@ export default function ChatWidget() {
     useEffect(() => {
 
         const timer = setTimeout(() => {
-
-            setShowBubble(false);
-
+            hideBubble();
         }, 5000);
 
 
@@ -76,6 +116,66 @@ export default function ChatWidget() {
 
         return () => clearTimeout(timer);
     }, [messages, loading]);
+
+    const handleContactAdmin = async () => {
+
+        try {
+
+            const response = await fetch(
+                "http://localhost:3000/contact-admin",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token ?? ""}`
+                    },
+                    body: JSON.stringify({
+
+                        guestId: getSessionId()
+
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                console.log(response);
+
+                alert("ส่งข้อมูลไม่สำเร็จ");
+
+                return;
+
+            }
+
+            // แสดงข้อความในแชท
+            setMessages(prev => [
+
+                ...prev,
+
+                {
+                    sender: "bot",
+
+                    text:
+                        `ลุงส่งเรื่องให้ทีมงานแล้ว 😊\n\n` +
+                        `รหัสอ้างอิง : ${data.reference}\n\n` +
+                        `กรุณาส่งรหัสนี้ให้ทีมงานใน LINE`
+                }
+
+            ]);
+
+            // เปิด LINE OA
+            window.open(data.line, "_blank");
+
+        } catch (err) {
+
+            console.error(err);
+
+            alert("เกิดข้อผิดพลาด");
+
+        }
+
+    };
 
     async function sendMessage() {
 
@@ -97,12 +197,15 @@ export default function ChatWidget() {
 
         try {
 
+            console.log(localStorage.getItem("token"));
             const res = await fetch("http://localhost:3000/chat", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                     Authorization: `Bearer ${token ?? ""}`
                 },
                 body: JSON.stringify({
+                    guestId: getSessionId(),
                     message: userText
                 })
             });
@@ -148,21 +251,20 @@ export default function ChatWidget() {
         <>
 
             {/* Bubble */}
-            {
-                showBubble && (
-
-                    <div className="auto-message show">
-
-                        สวัสดีจ้า มีอะไรให้ลุงช่วยไหมจ๊ะ 😊
-
-                    </div>
-
-                )
-            }
+            {showBubble && (
+                <div
+                    className={`auto-message
+            ${bubbleLeaving ? "hide" : "show"}
+            ${heroVisible ? "auto-message--hero" : ""}
+        `}
+                >
+                    สวัสดีจ้า มีอะไรให้ลุงช่วยไหมจ๊ะ 😊
+                </div>
+            )}
 
             {/* Contact Admin */}
 
-            {showAdmin && (
+            {/* {showAdmin && (
                 <a
                     href="https://www.facebook.com/LearnDoClub/"
                     className={`admin-btn 
@@ -174,26 +276,43 @@ export default function ChatWidget() {
                 >
                     {adminMinimized ? "💬" : "💬 ติดต่อทีมงาน"}
                 </a>
+            )} */}
+
+            {showAdmin && (
+                <button
+                    className={`admin-btn 
+            ${adminAttention ? "attention" : ""} 
+            ${adminMinimized ? "small" : ""}
+        `}
+                    rel="noreferrer"
+                    onClick={handleContactAdmin}
+                >
+                    {adminMinimized ? "💬" : "💬 ติดต่อทีมงาน"}
+                </button>
             )}
 
             {/* Floating Button */}
 
             <button
-                className="chat-btn"
+                className={`chat-btn ${heroVisible ? "chat-btn--hero" : ""
+                    }`}
                 onClick={() => {
 
                     setIsOpen(!isOpen);
 
-                    setShowBubble(false);
+                    // setShowBubble(false);
+                    hideBubble();
 
                 }}
             >
 
                 <img
-
-                    src="../../../img/uncleMini.png"
+                    src={
+                        heroVisible
+                            ? "../../../img/uncle.png"
+                            : "../../../img/uncleMini.png"
+                    }
                     alt="chat"
-
                 />
 
             </button>

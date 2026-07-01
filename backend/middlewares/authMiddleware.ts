@@ -56,3 +56,29 @@ export function verifyToken(
     }
 
 }
+
+export function optionalVerifyToken(
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return next();
+    }
+
+    try {
+        const token = authHeader.split(" ")[1];
+
+        req.user = jwt.verify(
+            token,
+            process.env.JWT_SECRET!
+        ) as JwtPayload;
+
+    } catch {
+        // Token ไม่ถูกต้องก็ปล่อยผ่านในฐานะ Guest
+    }
+
+    next();
+}

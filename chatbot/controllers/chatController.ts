@@ -1,15 +1,17 @@
 // import { createFuse } from "./services/searchService.mjs";
 import { Response } from "express";
 import { askGemini, buildPrompt } from "../services/geminiService.mjs";
-import { getSession, sessionSet, updateHistory, checkRateLimit, updateQuestionCount } from "../services/sessionService.mjs";
+import { getSession,sessionSet, updateHistory, checkRateLimit, updateQuestionCount } from "../services/sessionService.mjs";
 import { getIntent, buildContext, createFuse } from "../services/intentSearchContextService.mjs";
+
+import { getSessionId } from "../../src/utils/session";
 
 import { normalizeQuestion, adjustScore } from "../utils/normalizeQuestion.mjs";
 import { getSearchData } from "../services/searchDataService.mjs";
 
 import { createFAQFuse, searchFAQ } from "../services/faqService.mjs";
 import { AuthRequest } from "../../backend/middlewares/authMiddleware";
-
+import { createAdminChat } from "../services/adminService";
 
 const faqFuse = await createFAQFuse();
 
@@ -40,7 +42,6 @@ export async function chatController(
 ) {
 
     const sessionId = req.user?.user_id || req.body.guestId;
-
     const session = getSession(sessionId);
 
     const count = updateQuestionCount(sessionId);
@@ -129,7 +130,7 @@ export async function chatController(
         ) {
 
             const link = session.lastResults.raw.link?.trim();
-            
+
 
             const place = session.lastResults.raw.origin;
             let answer = `ซื้อได้ที่"${session.lastResults.raw.origin}"นะจ๊ะ`;
@@ -138,7 +139,7 @@ export async function chatController(
                     `ซื้อได้ที่"${place}"นะจ๊ะ`;
             } else {
                 answer =
-                `ลุงขอสอบถามแอดมินก่อนนะจ๊ะ`;
+                    `ลุงขอสอบถามแอดมินก่อนนะจ๊ะ`;
             }
 
             // if (link) {
@@ -279,4 +280,41 @@ export async function chatController(
         });
     }
 
+}
+
+export async function contactAdmin(
+    req: AuthRequest,
+    res: Response
+) {
+    try {
+        const sessionId = req.user?.user_id || req.body.guestId;
+
+        const session = getSession(sessionId);
+        console.log("USER",req.user);
+        console.log("session",session);
+        const history = session.history
+            .map(chat =>
+                `👤 ลูกค้า: ${chat.question}\n🤖 ลุง: ${chat.answer}`
+            )
+            .join("\n\n");
+
+        const adminChat = await createAdminChat({
+            session_id: sessionId,
+            history,
+            status: "waiting",
+            created_at: new Date().toISOString()
+        });
+
+        return res.json({
+            success: true,
+            reference: adminChat.reference_id
+        });
+
+    } catch (err) {
+        console.error(err);
+
+        return res.status(500).json({
+            success: false
+        });
+    }
 }
